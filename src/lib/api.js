@@ -5,7 +5,7 @@ const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'https://society-backend-mu.vercel.app/api',
 });
 
-// Helper to wait for Firebase to initialize if needed
+// Helper to wsait for Firebase to initialize if needed
 const getAuthToken = () => {
     return new Promise((resolve, reject) => {
         const unsubscribe = auth.onAuthStateChanged((user) => {
