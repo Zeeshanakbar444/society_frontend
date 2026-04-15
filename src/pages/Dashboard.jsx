@@ -62,13 +62,13 @@ export default function Dashboard() {
                     <h2 className="text-2xl md:text-3xl font-bold text-slate-900">{isAdmin ? 'Admin Dashboard' : `Welcome, ${profile?.fullName}`}</h2>
                     <p className="text-slate-500 mt-1 text-sm md:text-base">{isAdmin ? 'Community overview and quick actions.' : 'Manage your community dues and grievances.'}</p>
                 </div>
-                <button
+                {/* <button
                     onClick={() => auth.signOut()}
                     className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all font-semibold text-sm shadow-sm"
                 >
                     <LogOut size={18} />
                     Logout
-                </button>
+                </button> */}
             </header>
 
             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
