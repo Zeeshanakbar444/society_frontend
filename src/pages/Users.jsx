@@ -1,27 +1,26 @@
-import React, { useState, useEffect } from "react";
-import { FaEdit, FaTrash, FaUserShield, FaUser } from "react-icons/fa";
+import { FaEdit, FaTrash, FaUserShield, FaUser, FaSync } from "react-icons/fa";
 import api from "../lib/api";
+import { toast } from 'react-hot-toast';
+import { useState } from "react";
+import { useApi } from "../hooks/useApi";
+import ConfirmModal from "../components/ConfirmModal";
 
 const Users = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: users, loading, refresh } = useApi('residents');
   const [editingUser, setEditingUser] = useState(null);
   const [updatedRole, setUpdatedRole] = useState("");
+  const [userToDelete, setUserToDelete] = useState(null);
 
-  const fetchUsers = async () => {
-    try {
-      const response = await api.get("/residents");
-      setUsers(response.data);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    } finally {
-      setLoading(false);
-    }
+  const handleRefresh = async () => {
+    await toast.promise(
+      refresh(),
+      {
+        loading: 'Refreshing data...',
+        success: 'Data refreshed!',
+        error: 'Failed to refresh data.',
+      }
+    );
   };
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
 
   const handleEdit = (user) => {
     setEditingUser(user);
@@ -30,28 +29,44 @@ const Users = () => {
 
   const handleUpdate = async () => {
     try {
-      await api.patch(`/residents/${editingUser.id}`, { role: updatedRole });
+      await toast.promise(
+        api.patch(`/residents/${editingUser.id}`, { role: updatedRole }),
+        {
+          loading: 'Updating user role...',
+          success: 'User role updated successfully!',
+          error: (err) => err.response?.data?.error || 'Failed to update user role.',
+        }
+      );
       setEditingUser(null);
-      fetchUsers();
+      refresh();
     } catch (error) {
       console.error("Error updating user role:", error);
-      alert("Failed to update user role");
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      try {
-        await api.delete(`/residents/${id}`);
-        fetchUsers();
-      } catch (error) {
-        console.error("Error deleting user:", error);
-        alert(error.response?.data?.error || "Failed to delete user");
-      }
+  const handleDelete = (id) => {
+    setUserToDelete(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+    try {
+      await toast.promise(
+        api.delete(`/residents/${userToDelete}`),
+        {
+          loading: 'Deleting user...',
+          success: 'User deleted successfully!',
+          error: (err) => err.response?.data?.error || 'Failed to delete user.',
+        }
+      );
+      setUserToDelete(null);
+      refresh();
+    } catch (error) {
+      console.error("Error deleting user:", error);
     }
   };
 
-  if (loading) {
+  if (loading && users.length === 0) {
     return (
       <div className="p-6 bg-gray-100 min-h-screen flex items-center justify-center">
         <div className="text-xl font-semibold text-gray-600">Loading Users...</div>
@@ -64,9 +79,10 @@ const Users = () => {
       <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
         <h1 className="text-xl md:text-2xl font-bold">Admin User Management</h1>
         <button
-          onClick={fetchUsers}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          onClick={handleRefresh}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
         >
+          <FaSync className={loading ? "animate-spin" : ""} />
           Refresh Data
         </button>
       </div>
@@ -137,7 +153,7 @@ const Users = () => {
 
       {/* Edit Role Modal */}
       {editingUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-2">Update User Role</h2>
             <p className="text-gray-500 text-sm mb-6">
@@ -174,8 +190,17 @@ const Users = () => {
           </div>
         </div>
       )}
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={!!userToDelete}
+        onClose={() => setUserToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete User"
+        message="Are you sure you want to delete this user? This action cannot be undone."
+      />
     </div>
   );
 };
 
 export default Users;
+

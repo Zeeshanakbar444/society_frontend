@@ -2,7 +2,7 @@ import axios from 'axios';
 import { auth } from '../lib/firebase';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'https://society-backend-iota.vercel.app/api',
+    baseURL: import.meta.env.VITE_API_URL || 'https://society-backend-mu.vercel.app/api',
 });
 
 // Helper to wait for Firebase to initialize if needed
